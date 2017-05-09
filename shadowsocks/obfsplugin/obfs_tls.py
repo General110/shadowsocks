@@ -193,7 +193,7 @@ class tls_ticket_auth(plain.plain):
     def decode_error_return(self, buf):
         self.handshake_status = -1
         self.overhead = 0
-        if self.method == 'tls1.2_ticket_auth':
+        if self.method == 'tls1.2_ticket_auth' or self.method == 'tls1.3_ticket_auth':
             return (b'E'*2048, False, False)
         return (buf, True, False)
 
@@ -248,7 +248,10 @@ class tls_ticket_auth(plain.plain):
             return (b'', False, False)
 
         self.recv_buffer = self.recv_buffer[struct.unpack('>H', buf[:2])[0] + 5:]
-        self.handshake_status = 2
+        if self.method == 'tls1.3_ticket_auth':
+            self.handshake_status = 8
+        else:
+            self.handshake_status = 2
         buf = buf[2:]
         if not match_begin(buf, b'\x01\x00'): #client hello
             logging.info("tls_auth not client hello message")
